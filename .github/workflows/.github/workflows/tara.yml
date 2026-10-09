@@ -1,0 +1,20 @@
+name: Haftalik tarama
+on:
+  schedule: [{cron: '0 6 * * 1'}]
+  workflow_dispatch:
+permissions: {contents: write, issues: write}
+jobs:
+  tara:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 20}
+      - run: node tara.js
+      - name: Kaydet
+        run: |
+          git config user.name "radar-bot"; git config user.email "bot@users.noreply.github.com"
+          git add adaylar.json bu-hafta.md; git diff --cached --quiet || git commit -m "Haftalik adaylar"; git push
+      - name: Issue ac (e-posta bildirimi gelir)
+        env: {GH_TOKEN: '${{ github.token }}'}
+        run: gh issue create --title "Haftalik adaylar $(date +%F)" --body-file bu-hafta.md
